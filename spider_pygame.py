@@ -227,9 +227,9 @@ screen = pygame.display.set_mode((LARGURA, ALTURA))
 pygame.display.set_caption("Spider (1 Naipe)")
 clock = pygame.time.Clock()
 
-font_big = pygame.font.SysFont(None, 36)
-font_med = pygame.font.SysFont(None, 28)
-font_small = pygame.font.SysFont(None, 22)
+font_big = pygame.font.SysFont("DejaVu Sans", 24)
+font_med = pygame.font.SysFont("DejaVu Sans", 20)
+font_small = pygame.font.SysFont("DejaVu Sans", 18)
 
 # Botões
 stock_rect = pygame.Rect(MARGEM_X, TOPO_AREA_Y, CARTA_L, CARTA_A)
@@ -249,26 +249,54 @@ def pilha_rect(i: int) -> pygame.Rect:
 def desenhar_carta(surf, x, y, carta: Carta, elev=False):
     r = pygame.Rect(x, y, CARTA_L, CARTA_A)
 
+    # Fundo
     if carta.virada_para_cima:
-        pygame.draw.rect(surf, CARD_FRONT, r, border_radius=6)
-        pygame.draw.rect(surf, CARD_EDGE, r, 2, border_radius=6)
+        pygame.draw.rect(surf, CARD_FRONT, r, border_radius=8)
+        pygame.draw.rect(surf, CARD_EDGE, r, 2, border_radius=8)
 
-        txt = font_med.render(str(carta), True, TXT)
-        surf.blit(txt, (x+8, y+6))
+        # COR DO NAIPE (apenas ♠ no seu modo atual)
+        cor = (0, 0, 0)  # preto
+        # Se quiser adicionar ♥ ♦ vermelhos mais tarde, o código já está preparado:
+        if carta.naipe in ["♥", "♦"]:
+            cor = (200, 30, 30)
 
-        txt2 = font_small.render(str(carta), True, TXT)
-        surf.blit(txt2, (x + CARTA_L - txt2.get_width() - 8,
-                         y + CARTA_A - txt2.get_height() - 6))
+        valor = VALOR_NOME[carta.valor]
+        naipe = carta.naipe
+
+        # ----- TOPO ESQUERDO -----
+        txt_valor = font_small.render(valor, True, cor)
+        surf.blit(txt_valor, (x + 8, y + 6))
+
+        txt_naipe = font_med.render(naipe, True, cor)
+        surf.blit(txt_naipe, (x + 26, y + 6))
+
+        # ----- RODAPÉ DIREITO (invertido) -----
+        txt_valor2 = font_small.render(valor, True, cor)
+        surf.blit(txt_valor2, (x + CARTA_L - txt_valor2.get_width() - 8,
+                               y + CARTA_A - txt_valor2.get_height() - 8))
+
+        txt_naipe2 = font_med.render(naipe, True, cor)
+        surf.blit(txt_naipe2, (x + CARTA_L - txt_naipe2.get_width() - 26,
+                               y + CARTA_A - txt_naipe2.get_height() - 6))
+
+        # ----- NAIPE CENTRAL -----
+        txt_center = pygame.font.SysFont("DejaVu Sans", 36).render(naipe, True, cor)
+        surf.blit(txt_center,
+                  (x + CARTA_L//2 - txt_center.get_width()//2,
+                   y + CARTA_A//2 - txt_center.get_height()//2))
 
     else:
-        pygame.draw.rect(surf, CARD_BACK, r, border_radius=6)
-        pygame.draw.rect(surf, CARD_EDGE, r, 2, border_radius=6)
-        txt = font_small.render("Spider", True, TXT_INV)
-        surf.blit(txt, (x + (CARTA_L - txt.get_width())//2,
-                         y + (CARTA_A - txt.get_height())//2))
+        # CARTA VIRADA PARA BAIXO
+        pygame.draw.rect(surf, CARD_BACK, r, border_radius=8)
+        pygame.draw.rect(surf, CARD_EDGE, r, 2, border_radius=8)
 
+        txt = font_small.render("SPIDER", True, TXT_INV)
+        surf.blit(txt, (x + (CARTA_L - txt.get_width()) // 2,
+                         y + (CARTA_A - txt.get_height()) // 2))
+
+    # HIGHLIGHT (DICA / ARRASTO)
     if elev:
-        pygame.draw.rect(surf, (255, 255, 0), r, 4, border_radius=6)
+        pygame.draw.rect(surf, (255, 255, 0), r, 4, border_radius=8)
 
 
 def desenhar_ui_topo(jogo: Jogo):
@@ -436,12 +464,12 @@ def main():
                         origem_idx, qtd, destino_idx = mov
                         pilha = jogo.tableau[origem_idx]
 
-                        # --- DESTACAR BLOCO DE ORIGEM ---
+                        # DESTACAR BLOCO DE ORIGEM
                         start = len(pilha.cartas) - qtd
                         for i in range(start, len(pilha.cartas)):
                             hint_cards.add((origem_idx, i))
 
-                        # --- DESTACAR DESTINO ---
+                        # DESTACAR DESTINO
                         destino = jogo.tableau[destino_idx]
 
                         if destino.esta_vazia():
@@ -452,7 +480,7 @@ def main():
                             topo_idx = len(destino.cartas) - 1
                             hint_cards.add((destino_idx, topo_idx))
 
-                        hint_timer = pygame.time.get_ticks() + 1500
+                        hint_timer = pygame.time.get_ticks() + 3000
 
 
             # Clique mouse
