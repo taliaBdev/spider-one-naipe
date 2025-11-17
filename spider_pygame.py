@@ -263,14 +263,14 @@ def desenhar_carta(surf, x, y, carta: Carta, elev=False):
         valor = VALOR_NOME[carta.valor]
         naipe = carta.naipe
 
-        # ----- TOPO ESQUERDO -----
+        # TOPO ESQUERDO
         txt_valor = font_small.render(valor, True, cor)
         surf.blit(txt_valor, (x + 8, y + 6))
 
         txt_naipe = font_med.render(naipe, True, cor)
         surf.blit(txt_naipe, (x + 26, y + 6))
 
-        # ----- RODAPÉ DIREITO (invertido) -----
+        # RODAPÉ DIREITO (invertido)
         txt_valor2 = font_small.render(valor, True, cor)
         surf.blit(txt_valor2, (x + CARTA_L - txt_valor2.get_width() - 8,
                                y + CARTA_A - txt_valor2.get_height() - 8))
@@ -279,7 +279,7 @@ def desenhar_carta(surf, x, y, carta: Carta, elev=False):
         surf.blit(txt_naipe2, (x + CARTA_L - txt_naipe2.get_width() - 26,
                                y + CARTA_A - txt_naipe2.get_height() - 6))
 
-        # ----- NAIPE CENTRAL -----
+        # NAIPE CENTRAL
         txt_center = pygame.font.SysFont("DejaVu Sans", 36).render(naipe, True, cor)
         surf.blit(txt_center,
                   (x + CARTA_L//2 - txt_center.get_width()//2,
