@@ -213,6 +213,7 @@ TOP_TABLEAU_Y = 160
 OVERLAP_FACEDOWN = 8
 OVERLAP_FACEUP = 28
 
+# CORES INICIAIS (Modo Claro)
 BG = (83, 122, 78)
 CARD_FRONT = (240, 240, 240)
 CARD_BACK = (41, 43, 102)
@@ -221,6 +222,34 @@ TXT = (25, 25, 25)
 TXT_INV = (240, 240, 240)
 ACCENT = (220, 180, 30)
 DISABLED = (120, 120, 120)
+
+# VARIÁVEL GLOBAL PARA O TEMA
+dark_mode = False
+
+# FUNÇÃO PARA TROCAR O TEMA 
+def trocar_tema():
+    global BG, CARD_FRONT, CARD_BACK, CARD_EDGE, TXT, TXT_INV, ACCENT, DISABLED, dark_mode
+    if dark_mode: # Se estiver no escuro, vai para o claro
+        BG       = (83, 122, 78)
+        CARD_FRONT = (240, 240, 240)
+        CARD_BACK  = (41, 43, 102)
+        CARD_EDGE  = (15, 15, 20)
+        TXT        = (25, 25, 25)
+        TXT_INV    = (240, 240, 240)
+        ACCENT     = (220, 180, 30)
+        DISABLED   = (120, 120, 120)
+    else: # Se estiver no claro, vai para o escuro
+        BG       = (12, 15, 23)     # fundo escuro elegante
+        CARD_FRONT = (62, 68, 92)     # carta clara (muito mais legível!)
+        CARD_BACK  = (45, 52, 78)     # verso um pouco mais escuro
+        CARD_EDGE  = (200, 200, 220)  # borda clara (destaque perfeito)
+        TXT        = (240, 240, 250)  # texto quase branco
+        TXT_INV    = (20, 20, 35)     # texto no verso
+        ACCENT     = (90, 170, 255)   # azul bonito pro botão
+        DISABLED   = (70, 75, 95)
+    
+    dark_mode = not dark_mode # Alterna o estado
+
 
 pygame.init()
 screen = pygame.display.set_mode((LARGURA, ALTURA))
@@ -236,6 +265,9 @@ stock_rect = pygame.Rect(MARGEM_X, TOPO_AREA_Y, CARTA_L, CARTA_A)
 deal_btn = pygame.Rect(MARGEM_X + CARTA_L + 16, TOPO_AREA_Y + CARTA_A - 34, 120, 28)
 hint_btn = pygame.Rect(MARGEM_X + CARTA_L + 150, TOPO_AREA_Y + CARTA_A - 34, 120, 28)
 restart_btn = pygame.Rect(LARGURA - 180, TOPO_AREA_Y + CARTA_A - 34, 150, 28)
+
+# NOVO BOTÃO DE TEMA 
+theme_btn = pygame.Rect(LARGURA - 180, TOPO_AREA_Y, 150, 28)
 
 
 def coluna_x(i: int) -> int:
@@ -255,10 +287,20 @@ def desenhar_carta(surf, x, y, carta: Carta, elev=False):
         pygame.draw.rect(surf, CARD_EDGE, r, 2, border_radius=8)
 
         # COR DO NAIPE (apenas ♠ no seu modo atual)
-        cor = (0, 0, 0)  # preto
+        cor = (0, 0, 0)  # preto padrão
+
         # Se quiser adicionar ♥ ♦ vermelhos mais tarde, o código já está preparado:
         if carta.naipe in ["♥", "♦"]:
             cor = (200, 30, 30)
+        
+        # AJUSTE DA COR DO TEXTO PARA LEGIBILIDADE NO MODO ESCURO
+        if dark_mode and cor == (0,0,0):
+             # Mudar o naipe preto para uma cor mais clara no tema escuro
+            cor = (240, 240, 250) 
+        elif dark_mode and cor == (200, 30, 30):
+             # Mudar o naipe vermelho para uma cor mais clara/saturada no tema escuro (opcional)
+             cor = (255, 100, 100)
+
 
         valor = VALOR_NOME[carta.valor]
         naipe = carta.naipe
@@ -292,7 +334,7 @@ def desenhar_carta(surf, x, y, carta: Carta, elev=False):
 
         txt = font_small.render("SPIDER", True, TXT_INV)
         surf.blit(txt, (x + (CARTA_L - txt.get_width()) // 2,
-                         y + (CARTA_A - txt.get_height()) // 2))
+                        y + (CARTA_A - txt.get_height()) // 2))
 
     # HIGHLIGHT (DICA / ARRASTO)
     if elev:
@@ -307,8 +349,8 @@ def desenhar_ui_topo(jogo: Jogo):
     pygame.draw.rect(screen, CARD_EDGE, stock_rect, 2, border_radius=6)
 
     cnt = font_small.render(str(jogo.estoque.restante()),
-                            True,
-                            TXT_INV if jogo.estoque.restante() > 0 else (80, 80, 80))
+                             True,
+                             TXT_INV if jogo.estoque.restante() > 0 else DISABLED)
     screen.blit(cnt, (stock_rect.centerx - cnt.get_width()//2,
                       stock_rect.centery - cnt.get_height()//2))
 
@@ -318,20 +360,31 @@ def desenhar_ui_topo(jogo: Jogo):
     pygame.draw.rect(screen,
                      ACCENT if can_deal else DISABLED,
                      deal_btn, border_radius=6)
-    label = font_small.render("Distribuir (E)", True, (0, 0, 0))
+    label = font_small.render("Distribuir (E)", True, TXT_INV if not dark_mode else TXT_INV)
     screen.blit(label, (deal_btn.centerx - label.get_width()//2,
                         deal_btn.centery - label.get_height()//2))
 
     # Botão de Dica
-    pygame.draw.rect(screen, (100, 200, 255), hint_btn, border_radius=6)
-    htxt = font_small.render("Dica (H)", True, (0,0,0))
+    hint_color = ACCENT if not dark_mode else (90, 170, 255) # Ajuste a cor da dica para ser visível
+    pygame.draw.rect(screen, hint_color, hint_btn, border_radius=6)
+    htxt = font_small.render("Dica (H)", True, TXT_INV if not dark_mode else TXT_INV)
     screen.blit(htxt, (hint_btn.centerx - htxt.get_width()//2,
                        hint_btn.centery - htxt.get_height()//2))
 
     # Fundação
     ftxt = font_big.render(
-        f"Fundação: {len(jogo.fundacao)}/8", True, (240, 240, 240))
+        f"Fundação: {len(jogo.fundacao)}/8", True, TXT) # Usar TXT para o texto da fundação
     screen.blit(ftxt, (LARGURA//2 - ftxt.get_width()//2, TOPO_AREA_Y + 10))
+
+    # Botão de Tema 
+    theme_color = (200, 200, 200) # Cor neutra para o botão
+    pygame.draw.rect(screen, theme_color, theme_btn, border_radius=6)
+    # O texto deve indicar para qual modo o usuário vai
+    theme_text = "Modo Escuro" if not dark_mode else "Modo Claro" 
+    ttxt = font_small.render(theme_text, True, (0,0,0))
+    screen.blit(ttxt, (theme_btn.centerx - ttxt.get_width()//2,
+                        theme_btn.centery - ttxt.get_height()//2))
+
 
     # Reiniciar
     pygame.draw.rect(screen, (200, 90, 90), restart_btn, border_radius=6)
@@ -365,7 +418,11 @@ def desenhar_tableau(jogo: Jogo, drag_info, hint_cards):
 
         if pilha.esta_vazia():
             vazio = pygame.Rect(x, TOP_TABLEAU_Y, CARTA_L, CARTA_A)
-            pygame.draw.rect(screen, (0,0,0), vazio, 2, border_radius=6)
+            # Destaque para slot vazio da dica
+            if (i, -1) in hint_cards:
+                 pygame.draw.rect(screen, (255, 255, 0), vazio, 4, border_radius=6)
+            else:
+                 pygame.draw.rect(screen, CARD_EDGE, vazio, 2, border_radius=6)
 
     if arrastando and drag_cards:
         mx, my = mouse_pos
@@ -479,13 +536,19 @@ def main():
                             # marcar carta do topo
                             topo_idx = len(destino.cartas) - 1
                             hint_cards.add((destino_idx, topo_idx))
-
+                        
+                        # --- ALTERADO: DEFININDO TIMER PARA TECLA 'H' ---
                         hint_timer = pygame.time.get_ticks() + 3000
 
 
             # Clique mouse
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mx, my = event.pos
+
+                # Botão de Tema 
+                if theme_btn.collidepoint((mx,my)):
+                    trocar_tema()
+                    continue
 
                 # Botão distribuir
                 if deal_btn.collidepoint((mx,my)):
@@ -532,8 +595,9 @@ def main():
                         else:
                             topo_idx = len(pilha_dest.cartas) - 1
                             hint_cards.add((destino_idx, topo_idx))
-
-                        hint_timer = pygame.time.get_ticks() + 9000
+                        
+                        # --- ALTERADO: DEFININDO TIMER PARA CLIQUE DO BOTÃO ---
+                        hint_timer = pygame.time.get_ticks() + 3000
 
                     continue
 
@@ -599,7 +663,9 @@ def main():
 
         if end_text:
             e = font_big.render(end_text, True, (255,255,255))
-            pygame.draw.rect(screen, (0,0,0), (0, ALTURA-70, LARGURA, 70))
+            # Ajuste a cor de fundo da mensagem final para o tema
+            bg_end_color = (0,0,0) if not dark_mode else (30, 30, 45) 
+            pygame.draw.rect(screen, bg_end_color, (0, ALTURA-70, LARGURA, 70))
             screen.blit(e, (MARGEM_X, ALTURA - 56))
 
         pygame.display.flip()
